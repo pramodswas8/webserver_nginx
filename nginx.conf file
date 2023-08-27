@@ -1,0 +1,427 @@
+terminology in nginx.conf
+context & directives
+
+context
+============
+ - sections within the configuration
+where directive can be set for that given context.
+main context - where we configure global directives that apply to the master process (configuration file itself)
+http context - Http related
+server context - which is where we define a virtual host similar to an apache host and location
+location context - for matching Uri locations on incoming requests to the parent server context.
+
+
+
+directive 
+=================
+ - is specific configuration options that get set in the 
+configuration files and consists of a name and a value
+ex : 
+ server_name mydomain.com; (name and a value)
+
+creating a virtual host
+=============================
+instead of default nginx page, will host new code
+a basic virtual host to serve static files from a directory on our server. 
+
+create directory - 
+root: mkdir /website/page
+
+upload a static page code inside /website/page folder
+
+folder consists of html file index.html, css file which is linked to index.html
+
+main configuration file
+==================================
+/etc/nginx/nginx.conf (by default serving the holding nginx page)
+
+first thing define a virtual host
+each virtual host being a ner server context or server context block {}
+
+server {
+server context is responsible for listening on a port, 
+http://mydomain.com:80
+https://mydomain.com:443
+for a given IP Address or domain.
+
+events{}
+
+http{
+
+server{
+
+	listen 80;   			(listens 80  port number)
+	server_name 167.99.93.26; 	(domain name / ipaddress also includes wild card entries *.mydomain.com)
+
+	root /website/page;   		(root path page display path)root path where nginx will be serving the requests
+						or interpreting static requests
+						for example server receives a request for images/cat.png
+						by default nginx will look for that file in the root path	
+						
+}
+}
+
+to effect these changes we need to reload the nginx configuration using our systemd
+
+systemctl reload nginx
+systemctl restart nginx
+
+to check the syntax errors - nginx -t
+
+hit the ipaddress in the webbrowser you'll get new page
+
+location blocks 
+======================
+server {
+
+=========================================================================================================================================================================
+=========================================================================================================================================================================
+Nginx
+Configuration Paths:
+
+configuration files = /etc/nginx/nginx.conf
+root path   	    = /usr/share/nginx/html
+logs path	    = /var/log/nginx
+
+access.log
+errot.log
+
+tail -f acces.log (to display last few lines, tail command -f flag means follow)
+tail -f error.log
+
+ps -ef
+ps -ef  (ps displays information about active process, -e flag selects all process, -f flag full format listing)
+ps aux ()
+ps -ef | grep nginx
+ps aux | grep nginx
+
+kill -9 ppid    (KILL - TERMINATE A PROCESS, SIGNAL, ppid - parent process id)
+
+ps -ef | grep nginx
+
+
+systemctl status nginx.service
+systemctl restart nginx.service
+
+kill check the error.log
+access page and check the access.log
+
+check error.log
+
+wget https://www.free-css.com/assets/files/free-css-templates/download/page294/shapel.zip
+unzip shapel.zip
+
+backup html folder
+rename shapel folder as html folder
+
+check access.logs/error.logs
+
+top command
+
+nginx.conf file
+=================================================================================
+user & worker processes:
+==============================
+user nginx;         - nginx as a user, that worker processes will run on nginx user
+worker_processes auto; - number of worker processes. auto typically sets it to the number of CPU cores  
+
+=================================
+Error Log and Process ID:
+=================================
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+error_log: Specifies the path to the error log file.
+pid: Specifies the file where the main process ID (PID) is stored.
+
+
+
+# Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+====================================
+Events Configuration:
+====================================
+events block defines parameters related to event handling.
+worker_connections: Sets the maximum number of simultaneous connections each worker process can handle.
+multi_accept: Allows each worker process to accept multiple new connections in one iteration.
+
+events {
+    worker_connections 1024;
+}
+
+======================================
+HTTP Configuration:
+======================================
+
+http block holds HTTP-related configuration directives.
+include mime.types;: Includes the MIME types file.
+default_type: Sets the default MIME type.
+sendfile on;: Enables the use of the sendfile system call for file transmission.
+keepalive_timeout: Sets the maximum time a connection can be kept open.
+gzip on;: Enables gzip compression.
+server block defines a virtual server configuration.
+listen: Specifies the IP and port to listen on.
+server_name: Defines the server's domain names.
+location /: Configuration for the root directory ("/").
+root: Sets the root directory for serving files.
+index: Specifies the default file to serve when a directory is requested.
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+
+SERVER CONFIGURATION
+======================================================
+server Block:
+
+The server block defines the configuration for a virtual server.
+listen 80;: Specifies that this server block will listen on port 80.
+server_name: Defines the domain names this server block will respond to (e.g., example.com and www.example.com).
+Default Location (/):
+
+The location / block handles requests to the root directory ("/").
+root /var/www/example;: Sets the root directory for serving files when no specific location is specified.
+index index.html;: Specifies that index.html will be served as the default file in this location.
+Location for Images (/images/):
+
+The location /images/ block handles requests to URLs starting with /images/.
+alias /var/www/example/images/;: Maps requests to this location to the specified directory.
+Location for API (/api/):
+
+The location /api/ block handles requests to URLs starting with /api/.
+proxy_pass http://backend_server;: Forwards requests to the defined backend server (replace backend_server with the actual backend server's URL)
+
+You can include more location blocks to handle various types of requests, like static files, proxying to other servers, or implementing URL rewriting. Remember to adjust the paths, server names, and other settings according to your specific needs.
+
+When working with multiple websites or applications, you typically create separate server blocks for each domain or subdomain you're hosting on the same Nginx instance.
+
+
+
+
+
+
+    server {
+        listen       80;
+        listen       [::]:80;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+
+# Settings for a TLS enabled server.
+#
+#    server {
+#        listen       443 ssl http2;
+#        listen       [::]:443 ssl http2;
+#        server_name  _;
+#        root         /usr/share/nginx/html;
+#
+#        ssl_certificate "/etc/pki/nginx/server.crt";
+#        ssl_certificate_key "/etc/pki/nginx/private/server.key";
+#        ssl_session_cache shared:SSL:1m;
+#        ssl_session_timeout  10m;
+#        ssl_ciphers PROFILE=SYSTEM;
+#        ssl_prefer_server_ciphers on;
+#
+#        # Load configuration files for the default server block.
+#        include /etc/nginx/default.d/*.conf;
+#
+#        error_page 404 /404.html;
+#            location = /40x.html {
+#        }
+#
+#        error_page 500 502 503 504 /50x.html;
+#            location = /50x.html {
+#        }
+#    }
+
+}
+
+
+===========================================================================================================================================
+===========================================================================================================================================
+
+
+
+
+
+
+======================================================
+
+Main Configuration File: The primary configuration file is typically named nginx.conf
+/etc/nginx/nginx.conf
+Server Block Configuration: Additional configuration files for individual server blocks (virtual hosts) can be stored in a separate directory, often included in the main configuration.
+/etc/nginx/conf.d/
+Site Configuration: Site-specific configurations, including SSL settings and redirects, can be stored in a separate directory.
+/etc/nginx/sites-available/
+=============================================
+Log Paths:
+==============================================
+
+Error Log: Nginx error logs capture information about server errors and issues.
+/var/log/nginx/error.log
+Access Log: Access logs record information about incoming requests.
+/var/log/nginx/access.log
+
+
+=================================================
+Executable Paths:
+============================================
+Nginx Binary: The Nginx binary executable file.
+/usr/sbin/nginx
+Nginx Configuration Test: Command to check the syntax of Nginx configuration files before applying them.
+/usr/sbin/nginx -t
+Nginx Systemctl Service Script: Script to manage Nginx service using systemd.
+/lib/systemd/system/nginx.service
+======================================
+Web Server Document Root:
+========================================
+Default Document Root: The directory where Nginx serves website files by default.
+Default Path: /var/www/html/
+=================================================
+FastCGI Cache and Proxy Temp Path:
+==============================================
+FastCGI Cache Directory: Default location for storing cache files generated by the FastCGI cache module.
+
+Default Path: /var/cache/nginx/fastcgi
+Proxy Temp Directory: Temporary storage for files being proxied or cached by Nginx.
+
+Default Path: /var/cache/nginx/proxy
+
+==============================================
+SSL Paths:
+==================================================
+SSL Certificate Files: Location to store SSL certificate files.
+Default Path: /etc/nginx/ssl/
+======================================================
+Module Paths:
+=======================================================
+Module Configuration Files: Additional configuration files for various Nginx modules.
+Default Path: /etc/nginx/modules/
+
+
+
+NGINX
+===========================
+WHAT IS NGINX   ----------- webserver
+NGINX VS APACHE 
+================= 
+APACHE - 
+==================
+In heavy web traffic, it cannot support multiple requests.
+Apache is an open-source web server.
+It is mostly used for Unix, Linux, Windows and Solaris platforms.
+Apache is written in C and XML.
+It is designed for web server.
+===================
+NGINX - 
+===================
+It can support multiple client requests with limited hardware resources.
+Nginx is a web server. It is also used as a reverse proxy server which revices the request from client and send the request to proxy server.
+It is mostly used for Unix like systems, and does not completely support Windows.
+Nginx is written in C language
+It is designed for proxy server as well as web server.
+
+NGINX Installation
+=============================================
+SERVER OVERVIEW
+INSTALLING WITH A PACKAGE MANAGER
+BUILDING NGINX FROM SOURCE & ADDING MODULES
+ADDING AN NGINX SERVICE
+NGINX FOR WINDOWS
+
+Configuration - /etc/nginx/nginx.conf
+=============================================
+Understanding configuration Terms
+Creating virtual host
+location blocks
+variables
+rewrites & redirects
+try files & named locations
+logging
+inheritance & directive types
+php processing
+worker processes
+buffers & timeouts
+adding dynamic modules
+
+Performance
+====================================
+Headers & Expires
+Compressed Response with gzip
+FastCGI Cache
+HTTP2
+Server Push
+
+Security
+=====================================
+HTTPS(SSL)
+Rate Limiting
+Basic Auth
+Hardening Nginx
+Encrypt SSL Certificates
+
+Reverse Proxy & Load Balancing
+=======================================
+Prerequisites
+Reverse Proxy
+Load Balancer
+Load Balancer Options
+
+Archive
+==============================
+Adding NGINX Init Service
+GeoIP
+Video Streaming
+
+
+
+
+ 	
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
